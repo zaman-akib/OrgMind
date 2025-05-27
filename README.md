@@ -53,19 +53,6 @@ OrgMind is an AI-powered organizational growth monitoring agent that helps growi
 - **Matplotlib/Seaborn**: Statistical plotting
 - **Faker**: Mock data generation
 
-## 📁 Project Structure
-
-```
-orgmind/
-├── requirements.txt          # Python dependencies
-├── .env.example             # Environment variables template
-├── data_generator.py        # Mock data generation
-├── orgmind_agent.py        # Core LangChain agent
-├── streamlit_app.py        # Web interface
-├── demo.py                 # Demonstration script
-└── README.md               # This file
-```
-
 ## 🚀 Quick Start
 
 ### 1. Installation
@@ -76,7 +63,7 @@ git clone <repository-url>
 cd orgmind
 
 # Install dependencies
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
 ### 2. Environment Setup
