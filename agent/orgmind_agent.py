@@ -376,6 +376,107 @@ class OKRSummaryTool(BaseTool):
         
         return summary
 
+class GeneralAnalysisTool(BaseTool):
+    name: str = "general_analysis"
+    description: str = "Provide general analysis and recommendations for queries that don't match specific visualization tools"
+    analyzer: OrgMindDataAnalyzer
+    
+    def __init__(self, analyzer: OrgMindDataAnalyzer):
+        super().__init__(analyzer=analyzer)
+    
+    def _run(
+        self,
+        query: str,
+        run_manager: Optional[CallbackManagerForToolRun] = None,
+    ) -> str:
+        # Analyze available data and provide insights without charts
+        available_data = list(self.analyzer.datasets.keys())
+        
+        # Generate analysis based on query content and available data
+        analysis_results = []
+        recommendations = []
+        
+        # Check what data is relevant to the query
+        query_lower = query.lower()
+        
+        if any(keyword in query_lower for keyword in ['employee', 'staff', 'team', 'people', 'workforce']):
+            if 'employees' in self.analyzer.datasets:
+                emp_data = self.analyzer.datasets['employees']
+                total_employees = len(emp_data) if not emp_data.empty else 0
+                analysis_results.append(f"Current workforce size: {total_employees} employees")
+                
+                if 'department' in emp_data.columns:
+                    dept_breakdown = emp_data['department'].value_counts()
+                    analysis_results.append(f"Department breakdown: {dict(dept_breakdown)}")
+                    
+                recommendations.append("Consider workforce planning based on current distribution")
+                recommendations.append("Monitor department-wise growth patterns")
+        
+        if any(keyword in query_lower for keyword in ['financial', 'revenue', 'cost', 'budget', 'money']):
+            if 'financial' in self.analyzer.datasets:
+                fin_data = self.analyzer.datasets['financial']
+                if not fin_data.empty:
+                    latest_revenue = fin_data['revenue'].iloc[-1] if 'revenue' in fin_data.columns else 0
+                    latest_burn = fin_data['burn_rate'].iloc[-1] if 'burn_rate' in fin_data.columns else 0
+                    analysis_results.append(f"Latest revenue: ${latest_revenue:,.2f}")
+                    analysis_results.append(f"Current burn rate: ${latest_burn:,.2f}/day")
+                    
+                recommendations.append("Monitor cash flow trends closely")
+                recommendations.append("Consider cost optimization strategies")
+        
+        if any(keyword in query_lower for keyword in ['sprint', 'development', 'engineering', 'velocity']):
+            if 'sprints' in self.analyzer.datasets:
+                sprint_data = self.analyzer.datasets['sprints']
+                if not sprint_data.empty:
+                    avg_velocity = sprint_data['team_velocity'].mean() if 'team_velocity' in sprint_data.columns else 0
+                    analysis_results.append(f"Average team velocity: {avg_velocity:.1f} points")
+                    
+                recommendations.append("Focus on consistent sprint delivery")
+                recommendations.append("Consider team capacity planning")
+        
+        if any(keyword in query_lower for keyword in ['okr', 'objective', 'goal', 'target']):
+            if 'okrs' in self.analyzer.datasets:
+                okr_data = self.analyzer.datasets['okrs']
+                if not okr_data.empty:
+                    avg_score = okr_data['current_score'].mean() if 'current_score' in okr_data.columns else 0
+                    analysis_results.append(f"Average OKR score: {avg_score:.1f}")
+                    
+                recommendations.append("Align team efforts with strategic objectives")
+                recommendations.append("Regular OKR review and adjustment needed")
+        
+        # If no specific analysis was generated, provide general insights
+        if not analysis_results:
+            analysis_results = [
+                f"Available datasets: {', '.join(available_data)}",
+                "Query doesn't match specific analysis patterns",
+                "General organizational data is available for analysis"
+            ]
+            recommendations = [
+                "Consider refining your query to be more specific",
+                "Available analysis types: hiring trends, employee growth, profit forecast, engineering velocity, OKR summary",
+                "Use specific keywords to trigger detailed analysis"
+            ]
+        
+        # Format the response
+        summary = f"""
+        General Analysis Results:
+        
+        Key Insights:
+        {chr(10).join(f'• {result}' for result in analysis_results)}
+        
+        Recommendations:
+        {chr(10).join(f'• {rec}' for rec in recommendations)}
+        
+        Note: This is a general analysis without chart visualization. For detailed charts, please use specific analysis queries like:
+        - "hiring trends" for hiring analysis
+        - "employee growth" for growth tracking
+        - "profit forecast" for financial projections
+        - "engineering velocity" for development metrics
+        - "OKR summary" for strategic objectives
+        """
+        
+        return summary
+
 class OrgMindAgent:
     def __init__(self, openai_api_key: str):
         self.analyzer = OrgMindDataAnalyzer()
@@ -388,7 +489,8 @@ class OrgMindAgent:
             EmployeeGrowthTool(self.analyzer),
             ProfitForecastTool(self.analyzer),
             EngineeringVelocityTool(self.analyzer),
-            OKRSummaryTool(self.analyzer)
+            OKRSummaryTool(self.analyzer),
+            GeneralAnalysisTool(self.analyzer)
         ]
         
         # Create agent
@@ -396,11 +498,16 @@ class OrgMindAgent:
     
     def _create_agent(self):
         prompt = PromptTemplate.from_template("""
-        You are OrgMind, an AI co-pilot for organizational growth monitoring. 
+        You are OrgMind, an AI co-pilot for organizational growth monitoring.
         You help growing companies track performance, visualize growth, and drive strategic decisions.
         
         You have access to the following tools:
         {tools}
+        
+        Tool Selection Guidelines:
+        - Use specific tools (hiring_analysis, employee_growth, profit_forecast, engineering_velocity, okr_summary) when the query clearly matches those analysis types and you want to generate charts
+        - Use general_analysis for queries that don't match specific analysis patterns or when charts are not needed
+        - The general_analysis tool provides insights and recommendations without generating HTML charts
         
         Use the following format:
         Question: the input question you must answer
@@ -435,10 +542,13 @@ def main():
     # For demo purposes, we'll show what the agent can do
     sample_queries = [
         "Show me engineering hiring vs attrition for the past 6 months",
-        "Show me the employee growth over last 6 months", 
+        "Show me the employee growth over last 6 months",
         "Forecast our Q3 profit based on current burn rate",
         "Analyze engineering team velocity",
-        "Generate OKR performance summary"
+        "Generate OKR performance summary",
+        "What's the current state of our organization?",
+        "Give me insights about our team performance",
+        "How is our company doing overall?"
     ]
     
     print("\nSample queries you can ask:")

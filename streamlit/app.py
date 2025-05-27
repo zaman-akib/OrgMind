@@ -110,7 +110,10 @@ def main():
             "Show me the employee growth over last 6 months",
             "Forecast our Q3 profit based on current burn rate",
             "Analyze engineering team velocity",
-            "Generate OKR performance summary"
+            "Generate OKR performance summary",
+            "What's the current state of our organization?",
+            "Give me insights about our team performance",
+            "How is our company doing overall?"
         ]
         
         for query in sample_queries:
