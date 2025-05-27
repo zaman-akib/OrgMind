@@ -6,8 +6,11 @@ Demonstrates the AI-powered organizational growth monitoring agent
 
 import os
 import sys
-from data_generator import generate_all_mock_data, OrgDataGenerator
-from orgmind_agent import OrgMindAgent, OrgMindDataAnalyzer
+from pathlib import Path
+parent_dir = str(Path(__file__).parent.parent)
+sys.path.append(parent_dir)
+from data.data_generator import generate_all_mock_data, OrgDataGenerator
+from agent.orgmind_agent import OrgMindAgent, OrgMindDataAnalyzer
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns

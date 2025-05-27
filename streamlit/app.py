@@ -2,8 +2,12 @@ import streamlit as st
 import os
 from dotenv import load_dotenv
 import pandas as pd
-from data_generator import generate_all_mock_data
-from orgmind_agent import OrgMindAgent
+import sys
+from pathlib import Path
+parent_dir = str(Path(__file__).parent.parent)
+sys.path.append(parent_dir)
+from data.data_generator import generate_all_mock_data
+from agent.orgmind_agent import OrgMindAgent
 import plotly.express as px
 import plotly.graph_objects as go
 
